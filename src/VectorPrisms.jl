@@ -13,6 +13,7 @@ Either way you will automatically get a view onto your data that fills the `Abst
 """
 module VectorPrisms
 export AbstractRecordVector, VectorPrism
+export paths
 
 function check_compatible(::Type{T}) where T
     isconcretetype(T) || error("Type is not fully concrete")
@@ -87,6 +88,29 @@ function size_from(Terminal, ::Type{V}) where V
     sum(fieldtypes(V)) do fieldtype
         size_from(Terminal, fieldtype)
     end
+end
+
+"returns all the paths to indexed values"
+paths(R::Type{<:AbstractRecordVector}) = paths(String, R)
+function paths(::Type{String}, R::Type{<:AbstractRecordVector})
+    map(paths(Expr, R, start_from=:_)) do path_expr
+        string(path_expr)[3:end]
+    end
+end
+function paths(::Type{Expr}, S::Type{<:AbstractRecordVector{T}}; start_from=:_) where T
+    return _paths!(Expr[], T, S, start_from)
+end
+function _paths!(acc, ::Type{Terminal}, ::Type{<:Terminal}, get_path_expr) where Terminal
+    return push!(acc, get_path_expr)
+end
+function _paths!(acc, Terminal, S, get_path_expr)
+    for field_ind in 1:fieldcount(S)
+        fname = fieldname(S, field_ind)
+        fpath = :($(get_path_expr).$fname)
+        ft = fieldtype(S, field_ind)
+        _paths!(acc, Terminal, ft, fpath)
+    end
+    return acc
 end
 
 

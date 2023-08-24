@@ -20,7 +20,8 @@ mr3[2] = 20.0
 @test_throws BoundsError mr3[-1]
 @test_throws BoundsError mr3[4]=10.0
 @test_throws BoundsError mr3[-1]=11.0
-
+@test paths(typeof(mr3)) == ["a", "b", "c"]
+@test paths(Expr, typeof(mr3); start_from=:x) == [:(x.a), :(x.b), :(x.c)]
 
 mutable struct MRecord2NoSubtype
     alpha::Float64
@@ -41,6 +42,9 @@ vp2[1]=10.0
 @test vp2[1]==10.0==vp2.alpha
 vp2.beta=20.0
 @test vp2[2]==20.0==vp2.beta
+@test paths(typeof(vp2)) == ["backing.alpha", "backing.beta"]
+@test paths(Expr, typeof(vp2); start_from=:x) == [:(x.backing.alpha), :(x.backing.beta)]
+
 
 vp3 = VectorPrism((;x=1, y=2, z=3))
 @test eltype(vp3) == Int
@@ -68,6 +72,9 @@ vp5 = VectorPrism((;x=1.0, y=(;a=2.1, b=2.2, c=2.3), z=3.0))
 @test_throws BoundsError vp5[6]=10.0
 @test_throws BoundsError vp5[-1]=11.0
 @test_throws ErrorException vp5[1]=10.0
+@test paths(typeof(vp5)) == ["backing.x", "backing.y.a", "backing.y.b", "backing.y.c", "backing.z"]
+@test paths(Expr, typeof(vp5); start_from=:x) ==  [:(x.backing.x), :(x.backing.y.a), :(x.backing.y.b), :(x.backing.y.c), :(x.backing.z)]
+
 
 vp6 = VectorPrism((;x=1, y=2, w=(a=Ref(3.1), b=Ref(3.2)), z=(4.1, 4.2)))
 @test eltype(vp6) == Union{Int, Float64}
@@ -100,5 +107,7 @@ r3=IRecord3(1.0, (2.0, 3))
 @test_throws BoundsError r3[4]=10.0
 @test_throws BoundsError r3[-1]=11.0
 @test_throws ErrorException r3[1]=10.0
+@test paths(typeof(r3)) == ["a", "b.:(1)", "b.(2)"]  # not sure this is ideal, but it will do for now
+@test paths(Expr, typeof(r3); start_from=:x) == [:(x.a), :(x.b.:(1)), :(x.b.:(2))] 
 
 end  # module
