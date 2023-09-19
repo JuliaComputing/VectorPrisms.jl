@@ -138,3 +138,4 @@ function setsome_expr!(block, Terminal, S, get_path_expr)
 end
 
 end  # module
+using .VectorPrisms

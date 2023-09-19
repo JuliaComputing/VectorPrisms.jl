@@ -1,5 +1,5 @@
 module VectorPrisms
-using DAECompiler.VectorPrisms
+using CedarSim.VectorPrisms
 using Test
 
 mutable struct MRecord3 <: AbstractRecordVector{Float64}
@@ -107,7 +107,7 @@ r3=IRecord3(1.0, (2.0, 3))
 @test_throws BoundsError r3[4]=10.0
 @test_throws BoundsError r3[-1]=11.0
 @test_throws ErrorException r3[1]=10.0
-@test paths(typeof(r3)) == ["a", "b.:(1)", "b.(2)"]  # not sure this is ideal, but it will do for now
+@test paths(typeof(r3)) == ["a", "b.:(1)", "b.:(2)"]  # not sure this is ideal, but it will do for now
 @test paths(Expr, typeof(r3); start_from=:x) == [:(x.a), :(x.b.:(1)), :(x.b.:(2))] 
 
 end  # module
