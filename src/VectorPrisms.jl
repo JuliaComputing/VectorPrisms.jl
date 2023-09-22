@@ -34,13 +34,19 @@ Check for this by calling `VectorPrisms.check_compatible` on your type.
 """
 abstract type AbstractRecordVector{T} <: AbstractVector{T} end
 
-"Can use this to wrap anything else to make it a AbstractVector"
+"""
+    VectorPrism{T, B} <: AbstractRecordVector{T}
+
+Can use this to wrap anything else to make it a `AbstractVector{T}`.
+If `T` is passed directly then noncomposite fields of types other than `T` are ingored.
+Otherwise `T` is inferred as the union of all noncomposite fields
+"""
 struct VectorPrism{T, B} <: AbstractRecordVector{T}
     backing::B
 end
-function VectorPrism(x::B) where B
+VectorPrism(x::B) where B = VectorPrism{determine_eltype(B)}(x)
+function VectorPrism{T}(x::B) where {T, B}
     check_compatible(B)
-    T = determine_eltype(B)
     return VectorPrism{T, B}(x)
 end
 
@@ -49,6 +55,9 @@ Base.getproperty(obj::VectorPrism, sym::Symbol) = getproperty(getfield(obj, :bac
 Base.getproperty(obj::VectorPrism, sym::Symbol, order::Symbol) = getproperty(getfield(obj, :backing), sym, order)
 Base.setproperty!(obj::VectorPrism, sym::Symbol, x) = setproperty!(getfield(obj, :backing), sym, x)
 Base.setproperty!(obj::VectorPrism, sym::Symbol, x, order::Symbol) = setproperty!(getfield(obj, :backing), sym, x, order)
+
+(this::VectorPrism)(args...; kwargs...) = getfield(this, :backing)(args...; kwargs...)
+
 
 function determine_eltype(::Type{B}) where B
     fieldcount(B) == 0 && return B
@@ -85,7 +94,7 @@ end
 end
 size_from(::Type{Terminal}, ::Type{<:Terminal}) where Terminal = 1
 function size_from(Terminal, ::Type{V}) where V
-    sum(fieldtypes(V)) do fieldtype
+    sum(fieldtypes(V); init=0) do fieldtype
         size_from(Terminal, fieldtype)
     end
 end

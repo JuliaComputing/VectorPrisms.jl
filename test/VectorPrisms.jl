@@ -110,4 +110,12 @@ r3=IRecord3(1.0, (2.0, 3))
 @test paths(typeof(r3)) == ["a", "b.:(1)", "b.:(2)"]  # not sure this is ideal, but it will do for now
 @test paths(Expr, typeof(r3); start_from=:x) == [:(x.a), :(x.b.:(1)), :(x.b.:(2))] 
 
+
+mix1 = VectorPrism{Float64}((;a=1.5, b=nothing))
+@test size(mix1) == (1,)
+@test only(mix1) == 1.5
+
+mt_callable = VectorPrism{Float64}(x->2x)
+@test size(mt_callable) == (0,)
+@test mt_callable(4.5) == 9.0
 end  # module
