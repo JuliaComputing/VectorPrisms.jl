@@ -44,6 +44,8 @@ vp2.beta=20.0
 @test vp2[2]==20.0==vp2.beta
 @test paths(typeof(vp2)) == ["backing.alpha", "backing.beta"]
 @test paths(Expr, typeof(vp2); start_from=:x) == [:(x.backing.alpha), :(x.backing.beta)]
+@test startswith(repr(vp2), "VectorPrism{Float64}(")
+@test startswith(repr("text/plain", vp2), "VectorPrism{Float64} view of")
 
 
 vp3 = VectorPrism((;x=1, y=2, z=3))

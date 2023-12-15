@@ -58,6 +58,17 @@ Base.setproperty!(obj::VectorPrism, sym::Symbol, x, order::Symbol) = setproperty
 
 (this::VectorPrism)(args...; kwargs...) = getfield(this, :backing)(args...; kwargs...)
 
+function Base.show(io::IO, vp::VectorPrism{T}) where T
+    print(io, "VectorPrism{$T}(")
+    show(io, getfield(vp, :backing))
+    print(io, ")")
+end
+
+function Base.show(io::IO, mime::MIME"text/plain", vp::VectorPrism{T}) where T
+    print(io, "VectorPrism{$T} view of ")
+    show(io, mime, getfield(vp, :backing))
+end
+
 
 function determine_eltype(::Type{B}) where B
     fieldcount(B) == 0 && return B
