@@ -100,11 +100,13 @@ function getsome_expr!(block, Terminal, S, get_path_expr)
 end
 
 
-Base.size(x::AbstractRecordVector{T}) where T = return tuple(size_from(T, typeof(x)))
+@generated function Base.size(x::AbstractRecordVector{T}) where T
+    return tuple(size_from(T, x))
+end
 size_from(::Type{Terminal}, ::Type{<:Terminal}) where Terminal = 1
-Base.@assume_effects :foldable function size_from(Terminal, ::Type{V}) where V
-    sum(fieldtypes(V); init=0) do @nospecialize fieldtype
-        size_from(Terminal, fieldtype)::Int
+function size_from(Terminal, ::Type{V}) where V
+    sum(fieldtypes(V); init=0) do fieldtype
+        size_from(Terminal, fieldtype)
     end
 end
 
