@@ -134,13 +134,13 @@ function _paths!(acc, Terminal, S, get_path_expr)
 end
 
 """
-    indexof(ar::AbstractRecordVector, path)
+    indexof(R::Type{<:AbstractRecordVector}, path)
 
 Returns the index corresponding to a given path to a field inside a abstract record vector.
 """
-function indexof(ar::AbstractRecordVector, path...)
+function indexof(R::Type{<:AbstractRecordVector}, path...)
     #PRE-OPT: this could be made to constant fold away if written as a generated function
-    all_paths = paths(Expr, typeof(ar))
+    all_paths = paths(Expr, R)
     this_path = foldl((acc, x) -> Expr(:., acc, QuoteNode(x)), path, init=:_)
     index = findfirst(==(this_path), all_paths)
     if isnothing(index)

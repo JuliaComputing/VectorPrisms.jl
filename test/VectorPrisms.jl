@@ -22,7 +22,7 @@ mr3[2] = 20.0
 @test_throws BoundsError mr3[-1]=11.0
 @test paths(typeof(mr3)) == ["a", "b", "c"]
 @test paths(Expr, typeof(mr3); start_from=:x) == [:(x.a), :(x.b), :(x.c)]
-@test indexof(mr3, :a) == 1
+@test indexof(typeof(mr3), :a) == 1
 
 
 mutable struct MRecord2NoSubtype
@@ -48,7 +48,7 @@ vp2.beta=20.0
 @test paths(Expr, typeof(vp2); start_from=:x) == [:(x.backing.alpha), :(x.backing.beta)]
 @test startswith(repr(vp2), "VectorPrism{Float64}(")
 @test startswith(repr("text/plain", vp2), "VectorPrism{Float64} view of")
-@test indexof(vp2, :backing, :beta) == 2
+@test indexof(typeof(vp2), :backing, :beta) == 2
 
 vp3 = VectorPrism((;x=1, y=2, z=3))
 @test eltype(vp3) == Int
@@ -78,9 +78,9 @@ vp5 = VectorPrism((;x=1.0, y=(;a=2.1, b=2.2, c=2.3), z=3.0))
 @test_throws ErrorException vp5[1]=10.0
 @test paths(typeof(vp5)) == ["backing.x", "backing.y.a", "backing.y.b", "backing.y.c", "backing.z"]
 @test paths(Expr, typeof(vp5); start_from=:x) ==  [:(x.backing.x), :(x.backing.y.a), :(x.backing.y.b), :(x.backing.y.c), :(x.backing.z)]
-@test indexof(vp5, :x) == 1
-@test indexof(vp5, :y, :b) == 3
-@test indexof(vp5, :z) == 5
+@test indexof(typeof(vp5), :backing, :x) == 1
+@test indexof(typeof(vp5), :backing, :y, :b) == 3
+@test indexof(typeof(vp5), :backing, :z) == 5
 
 vp6 = VectorPrism((;x=1, y=2, w=(a=Ref(3.1), b=Ref(3.2)), z=(4.1, 4.2)))
 @test eltype(vp6) == Union{Int, Float64}
@@ -97,7 +97,7 @@ vp6 = VectorPrism((;x=1, y=2, w=(a=Ref(3.1), b=Ref(3.2)), z=(4.1, 4.2)))
 vp6[4]=300.1
 @test vp6[4] == 300.1
 @test_throws ErrorException vp6[1]=10
-@test indexof(vp6, :w, :a, :x) == 3
+@test indexof(typeof(vp6), :backing, :w, :a, :x) == 3
 
 struct IRecord3 <: AbstractRecordVector{Union{Float64, Int}}
     a::Float64
@@ -116,9 +116,9 @@ r3=IRecord3(1.0, (2.0, 3))
 @test_throws ErrorException r3[1]=10.0
 @test paths(typeof(r3)) == ["a", "b.:(1)", "b.:(2)"]  # not sure this is ideal, but it will do for now
 @test paths(Expr, typeof(r3); start_from=:x) == [:(x.a), :(x.b.:(1)), :(x.b.:(2))] 
-@test indexof(r3, :a) == 1
-@test indexof(r3, :b, 1) == 2
-@test indexof(r3, :b, 2) == 3
+@test indexof(typeof(r3), :a) == 1
+@test indexof(typeof(r3), :b, 1) == 2
+@test indexof(typeof(r3), :b, 2) == 3
 
 mix1 = VectorPrism{Float64}((;a=1.5, b=nothing))
 @test size(mix1) == (1,)
