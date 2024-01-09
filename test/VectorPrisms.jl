@@ -49,8 +49,8 @@ vp2.beta=20.0
 @test paths(Expr, typeof(vp2); start_from=:x) == [:(x.backing.alpha), :(x.backing.beta)]
 @test startswith(repr(vp2), "VectorPrism{Float64}(")
 @test startswith(repr("text/plain", vp2), "VectorPrism{Float64} view of")
-@test indexof(typeof(vp2), :backing, :beta) == 2
-@test vp2.alpha === vp2[indexof(typeof(vp2), :backing, :alpha)]
+@test indexof(typeof(vp2), :beta) == 2
+@test vp2.alpha === vp2[indexof(typeof(vp2), :alpha)]
 
 vp3 = VectorPrism((;x=1, y=2, z=3))
 @test eltype(vp3) == Int
@@ -80,10 +80,10 @@ vp5 = VectorPrism((;x=1.0, y=(;a=2.1, b=2.2, c=2.3), z=3.0))
 @test_throws ErrorException vp5[1]=10.0
 @test paths(typeof(vp5)) == ["backing.x", "backing.y.a", "backing.y.b", "backing.y.c", "backing.z"]
 @test paths(Expr, typeof(vp5); start_from=:x) ==  [:(x.backing.x), :(x.backing.y.a), :(x.backing.y.b), :(x.backing.y.c), :(x.backing.z)]
-@test indexof(typeof(vp5), :backing, :x) == 1
-@test indexof(typeof(vp5), :backing, :y, :b) == 3
-@test indexof(typeof(vp5), :backing, :z) == 5
-@test vp5.y.c == vp5[indexof(typeof(vp5), :backing, :y, :c)]
+@test indexof(typeof(vp5), :x) == 1
+@test indexof(typeof(vp5), :y, :b) == 3
+@test indexof(typeof(vp5), :z) == 5
+@test vp5.y.c == vp5[indexof(typeof(vp5), :y, :c)]
 
 vp6 = VectorPrism((;x=1, y=2, w=(a=Ref(3.1), b=Ref(3.2)), z=(4.1, 4.2)))
 @test eltype(vp6) == Union{Int, Float64}
@@ -100,10 +100,10 @@ vp6 = VectorPrism((;x=1, y=2, w=(a=Ref(3.1), b=Ref(3.2)), z=(4.1, 4.2)))
 vp6[4]=300.1
 @test vp6[4] == 300.1
 @test_throws ErrorException vp6[1]=10
-@test indexof(typeof(vp6), :backing, :w, :a, :x) == 3
-@test vp6.w.b.x === vp6[indexof(typeof(vp6), :backing, :w, :b, :x)]
-@test_throws BoundsError indexof(typeof(vp6), :backing, :w, :b)  # not a terminal
-@test_throws BoundsError indexof(typeof(vp6), :backing, :w, :c)  # not present
+@test indexof(typeof(vp6), :w, :a, :x) == 3
+@test vp6.w.b.x === vp6[indexof(typeof(vp6), :w, :b, :x)]
+@test_throws BoundsError indexof(typeof(vp6), :w, :b)  # not a terminal
+@test_throws BoundsError indexof(typeof(vp6), :w, :c)  # not present
 
 
 struct IRecord3 <: AbstractRecordVector{Union{Float64, Int}}

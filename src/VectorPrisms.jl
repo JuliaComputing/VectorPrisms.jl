@@ -138,7 +138,12 @@ end
 
 Returns the index corresponding to a given path to a field inside a abstract record vector.
 """
-function indexof(R::Type{<:AbstractRecordVector}, path...)
+indexof(R::Type{<:AbstractRecordVector}, path...) = _indexof(R, path...)
+
+# special logic for VectorPrisms so don't need to list the hidden backing field:
+indexof(P::Type{<:VectorPrism}, path...) = _indexof(P, :backing, path...)
+
+function _indexof(R::Type{<:AbstractRecordVector}, path...)
     #PRE-OPT: this could be made to constant fold away if written as a generated function
     all_paths = paths(Expr, R)
     this_path = foldl((acc, x) -> Expr(:., acc, QuoteNode(x)), path, init=:_)
