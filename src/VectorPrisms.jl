@@ -132,18 +132,18 @@ function _paths!(acc, Terminal, S, get_path_expr)
     end
     return acc
 end
+function _paths!(acc, Terminal, S::Type{<:VectorPrism}, get_path_expr)
+    # special logic to hide the backing field. Constrast to `_paths!(acc, Terminal, S, get_path_expr)`
+    ft = fieldtype(S, :backing)
+    return _paths!(acc, Terminal, ft, get_path_expr)
+end
 
 """
     indexof(R::Type{<:AbstractRecordVector}, path)
 
 Returns the index corresponding to a given path to a field inside a abstract record vector.
 """
-indexof(R::Type{<:AbstractRecordVector}, path...) = _indexof(R, path...)
-
-# special logic for VectorPrisms so don't need to list the hidden backing field:
-indexof(P::Type{<:VectorPrism}, path...) = _indexof(P, :backing, path...)
-
-function _indexof(R::Type{<:AbstractRecordVector}, path...)
+function indexof(R::Type{<:AbstractRecordVector}, path...)
     #PRE-OPT: this could be made to constant fold away if written as a generated function
     all_paths = paths(Expr, R)
     this_path = foldl((acc, x) -> Expr(:., acc, QuoteNode(x)), path, init=:_)

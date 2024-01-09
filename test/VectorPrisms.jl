@@ -45,8 +45,8 @@ vp2[1]=10.0
 @test vp2[1]==10.0==vp2.alpha
 vp2.beta=20.0
 @test vp2[2]==20.0==vp2.beta
-@test paths(typeof(vp2)) == ["backing.alpha", "backing.beta"]
-@test paths(Expr, typeof(vp2); start_from=:x) == [:(x.backing.alpha), :(x.backing.beta)]
+@test paths(typeof(vp2)) == ["alpha", "beta"]
+@test paths(Expr, typeof(vp2); start_from=:x) == [:(x.alpha), :(x.beta)]
 @test startswith(repr(vp2), "VectorPrism{Float64}(")
 @test startswith(repr("text/plain", vp2), "VectorPrism{Float64} view of")
 @test indexof(typeof(vp2), :beta) == 2
@@ -78,8 +78,8 @@ vp5 = VectorPrism((;x=1.0, y=(;a=2.1, b=2.2, c=2.3), z=3.0))
 @test_throws BoundsError vp5[6]=10.0
 @test_throws BoundsError vp5[-1]=11.0
 @test_throws ErrorException vp5[1]=10.0
-@test paths(typeof(vp5)) == ["backing.x", "backing.y.a", "backing.y.b", "backing.y.c", "backing.z"]
-@test paths(Expr, typeof(vp5); start_from=:x) ==  [:(x.backing.x), :(x.backing.y.a), :(x.backing.y.b), :(x.backing.y.c), :(x.backing.z)]
+@test paths(typeof(vp5)) == ["x", "y.a", "y.b", "y.c", "z"]
+@test paths(Expr, typeof(vp5); start_from=:x) ==  [:(x.x), :(x.y.a), :(x.y.b), :(x.y.c), :(x.z)]
 @test indexof(typeof(vp5), :x) == 1
 @test indexof(typeof(vp5), :y, :b) == 3
 @test indexof(typeof(vp5), :z) == 5
