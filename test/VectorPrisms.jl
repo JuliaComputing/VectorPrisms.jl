@@ -23,6 +23,7 @@ mr3[2] = 20.0
 @test paths(typeof(mr3)) == ["a", "b", "c"]
 @test paths(Expr, typeof(mr3); start_from=:x) == [:(x.a), :(x.b), :(x.c)]
 @test indexof(typeof(mr3), :a) == 1
+@test mr3.b === mr3[indexof(typeof(mr3), :b)]
 
 
 mutable struct MRecord2NoSubtype
@@ -49,6 +50,7 @@ vp2.beta=20.0
 @test startswith(repr(vp2), "VectorPrism{Float64}(")
 @test startswith(repr("text/plain", vp2), "VectorPrism{Float64} view of")
 @test indexof(typeof(vp2), :backing, :beta) == 2
+@test vp2.alpha === vp2[indexof(typeof(vp2), :backing, :alpha)]
 
 vp3 = VectorPrism((;x=1, y=2, z=3))
 @test eltype(vp3) == Int
@@ -81,6 +83,7 @@ vp5 = VectorPrism((;x=1.0, y=(;a=2.1, b=2.2, c=2.3), z=3.0))
 @test indexof(typeof(vp5), :backing, :x) == 1
 @test indexof(typeof(vp5), :backing, :y, :b) == 3
 @test indexof(typeof(vp5), :backing, :z) == 5
+@test vp5.y.c == vp5[indexof(typeof(vp5), :backing, :y, :c)]
 
 vp6 = VectorPrism((;x=1, y=2, w=(a=Ref(3.1), b=Ref(3.2)), z=(4.1, 4.2)))
 @test eltype(vp6) == Union{Int, Float64}
@@ -98,6 +101,10 @@ vp6[4]=300.1
 @test vp6[4] == 300.1
 @test_throws ErrorException vp6[1]=10
 @test indexof(typeof(vp6), :backing, :w, :a, :x) == 3
+@test vp6.w.b.x === vp6[indexof(typeof(vp6), :backing, :w, :b, :x)]
+@test_throws BoundsError indexof(typeof(vp6), :backing, :w, :b)  # not a terminal
+@test_throws BoundsError indexof(typeof(vp6), :backing, :w, :c)  # not present
+
 
 struct IRecord3 <: AbstractRecordVector{Union{Float64, Int}}
     a::Float64
@@ -119,6 +126,9 @@ r3=IRecord3(1.0, (2.0, 3))
 @test indexof(typeof(r3), :a) == 1
 @test indexof(typeof(r3), :b, 1) == 2
 @test indexof(typeof(r3), :b, 2) == 3
+@test r3.b[1] == r3[indexof(typeof(r3), :b, 1)]
+@test_throws BoundsError indexof(typeof(r3), :c)  # not present
+@test_throws BoundsError indexof(typeof(r3), :b, 99)  # not present
 
 mix1 = VectorPrism{Float64}((;a=1.5, b=nothing))
 @test size(mix1) == (1,)

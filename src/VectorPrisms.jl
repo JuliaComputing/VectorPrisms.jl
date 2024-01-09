@@ -144,7 +144,7 @@ function indexof(R::Type{<:AbstractRecordVector}, path...)
     this_path = foldl((acc, x) -> Expr(:., acc, QuoteNode(x)), path, init=:_)
     index = findfirst(==(this_path), all_paths)
     if isnothing(index)
-        throw(BoundsError(ar, path))
+        throw(BoundsError(R, path))
     end
     return index
 end
