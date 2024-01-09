@@ -13,7 +13,7 @@ Either way you will automatically get a view onto your data that fills the `Abst
 """
 module VectorPrisms
 export AbstractRecordVector, VectorPrism
-export paths
+export paths, indexof
 
 function check_compatible(::Type{T}) where T
     isconcretetype(T) || error("Type is not fully concrete")
@@ -133,6 +133,21 @@ function _paths!(acc, Terminal, S, get_path_expr)
     return acc
 end
 
+"""
+    indexof(ar::AbstractRecordVector, path)
+
+Returns the index corresponding to a given path to a field inside a abstract record vector.
+"""
+function indexof(ar::AbstractRecordVector, path...)
+    #PRE-OPT: this could be made to constant fold away if written as a generated function
+    all_paths = paths(Expr, typeof(ar))
+    this_path = foldl((acc, x) -> Expr(:., acc, QuoteNode(x)), path, init=:_)
+    index = findfirst(==(this_path), all_paths)
+    if isnothing(index)
+        throw(BoundsError(ar, path))
+    end
+    return index
+end
 
 # Note: this will error if the particular index does not line up with a mutable struct position
 # This could be made more powerful using Accessors.jl
