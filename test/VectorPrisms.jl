@@ -130,6 +130,16 @@ r3=IRecord3(1.0, (2.0, 3))
 @test_throws BoundsError indexof(typeof(r3), :c)  # not present
 @test_throws BoundsError indexof(typeof(r3), :b, 99)  # not present
 
+nested_vp = VectorPrism((;a=1, b=VectorPrism((;x=2, y=3))))
+@test size(nested_vp) == (3,)
+@test nested_vp[1] == 1
+@test nested_vp[2] == 2
+@test nested_vp[3] == 3
+@test paths(typeof(nested_vp)) == ["a", "b.x", "b.y"]
+@test paths(Expr, typeof(nested_vp)) == [:(_.a), :(_.b.x), :(_.b.y)]
+@test indexof(typeof(nested_vp), :b, :x) == 2
+@test nested_vp.b.y == nested_vp[indexof(typeof(nested_vp), :b, :y)]
+
 mix1 = VectorPrism{Float64}((;a=1.5, b=nothing))
 @test size(mix1) == (1,)
 @test only(mix1) == 1.5
