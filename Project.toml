@@ -1,6 +1,6 @@
 name = "VectorPrisms"
 uuid = "fca4bea3-143f-49fa-bca2-9809b242ef85"
-version = "1.0.0-DEV"
+version = "1.0.0"
 
 [compat]
 Aqua="0.8.4"
