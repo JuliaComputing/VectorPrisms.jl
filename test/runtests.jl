@@ -6,5 +6,8 @@ using Aqua
     @testset "Code quality (Aqua.jl)" begin
         Aqua.test_all(VectorPrisms)
     end
-    # Write your tests here.
+
+    @testset "basic functionality" begin
+        include("basic_functionality.jl")
+    end
 end
