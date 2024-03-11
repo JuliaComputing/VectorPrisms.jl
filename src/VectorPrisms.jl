@@ -10,6 +10,9 @@ You can either directly subtype `AbstractRecordVector`(@ref) or wrap your type i
 Either way you will automatically get a view onto your data that fills the `AbstractVector` type requirements.
 """
 module VectorPrisms
+
+using StaticArraysCore: StaticArray, size_to_tuple, tuple_prod
+
 export AbstractRecordVector, VectorPrism
 export paths, indexof
 
@@ -20,6 +23,10 @@ function check_compatible(::Type{T}) where T
     end
 end
 check_compatible(::Type{<:Array}) = error("Type contains an array")
+function check_compatible(::Type{<:StaticArray{S, T}}) where {S, T}
+    isconcretetype(T) || error("Type is not fully concrete")
+    check_compatible(T)
+end
 
 
 """
@@ -76,6 +83,14 @@ function determine_eltype(::Type{B}) where B
     end
     return eltype
 end
+function determine_eltype(::Type{<:StaticArray{S, T}}) where {S, T}
+    fieldcount(T) == 0 && return T
+    eltype = Union{}
+    for ft in fieldtypes(T)
+        eltype = Union{eltype, determine_eltype(ft)}
+    end
+    return eltype
+end
 
 
 @generated function Base.getindex(x::AbstractRecordVector{T}, ii::Int) where T
@@ -96,6 +111,13 @@ function getsome_expr!(block, Terminal, S, get_path_expr)
     end
     return block
 end
+function getsome_expr!(block, Terminal, ::Type{<:StaticArray{S, T}}, get_path_expr) where {S, T}
+    for idx in CartesianIndices(size_to_tuple(S))
+        fpath = :(getindex($get_path_expr, $idx))
+        VectorPrisms.getsome_expr!(block, Terminal, T, fpath)
+    end
+    return block
+end
 
 
 @generated function Base.size(x::AbstractRecordVector{T}) where T
@@ -106,6 +128,12 @@ function size_from(Terminal, ::Type{V}) where V
     sum(fieldtypes(V); init=0) do fieldtype
         size_from(Terminal, fieldtype)
     end
+end
+function size_from(::Type{Terminal}, ::Type{<:StaticArray{S, T}}) where {Terminal, S, T <: Terminal}
+    tuple_prod(S)
+end
+function size_from(Terminal, ::Type{<:StaticArray{S, T}}) where {S, T}
+    tuple_prod(S) * size_from(Terminal, T)
 end
 
 "returns all the paths to indexed values"
@@ -135,6 +163,13 @@ function _paths!(acc, Terminal, S::Type{<:VectorPrism}, get_path_expr)
     ft = fieldtype(S, :backing)
     return _paths!(acc, Terminal, ft, get_path_expr)
 end
+function _paths!(acc, Terminal, ::Type{<:StaticArray{S, T}}, get_path_expr) where {S, T}
+    for idx in CartesianIndices(size_to_tuple(S))
+        fpath = :($(get_path_expr)[$idx])
+        _paths!(acc, Terminal, T, fpath)
+    end
+    return acc
+end
 
 """
     indexof(R::Type{<:AbstractRecordVector}, path)
@@ -144,7 +179,13 @@ Returns the index corresponding to a given path to a field inside a abstract rec
 function indexof(R::Type{<:AbstractRecordVector}, path...)
     #PRE-OPT: this could be made to constant fold away if written as a generated function
     all_paths = paths(Expr, R)
-    this_path = foldl((acc, x) -> Expr(:., acc, QuoteNode(x)), path, init=:_)
+    this_path = foldl(path, init=:_) do acc, x
+        if x isa CartesianIndex
+            Expr(:ref, acc, x)
+        else
+            Expr(:., acc, QuoteNode(x))
+        end
+    end
     index = findfirst(==(this_path), all_paths)
     if isnothing(index)
         throw(BoundsError(R, path))
@@ -171,6 +212,21 @@ function setsome_expr!(block, Terminal, S, get_path_expr)
             fpath = :(getfield($get_path_expr, $field_ind))
             setsome_expr!(block, Terminal, ft, fpath)
         end
+    end
+    return block
+end
+function setsome_expr!(block, ::Type{Terminal}, ::Type{<:StaticArray{S, T}}, get_path_expr) where {Terminal, S, T <: Terminal}
+    for idx in CartesianIndices(size_to_tuple(S))
+        ind_val = length(block.args) + 1
+        set_path_expr = :(setindex!($get_path_expr, value, $idx))
+        push!(block.args, :(ii==$(ind_val) && return $set_path_expr))
+    end
+    return block
+end
+function setsome_expr!(block, Terminal, ::Type{<:StaticArray{S, T}}, get_path_expr) where {S, T}
+    for idx in CartesianIndices(size_to_tuple(S))
+        fpath = :(getindex($get_path_expr, $idx))
+        setsome_expr!(block, Terminal, T, fpath)
     end
     return block
 end
