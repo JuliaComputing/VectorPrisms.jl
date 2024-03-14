@@ -92,6 +92,7 @@ julia> indexof(Bar, :foo, :a)
 julia> indexof(Bar, :y)
 3
 ```
+
 ### How do I use VectorPrism?
 
 In implementation, there is little more to `VectorPrism` than simply being a single field struct that subtypes `AbstractRecordVector`.
@@ -143,8 +144,10 @@ Some things like `getproperty` and function invocation are delegated to the orig
 
 ### Limitations: no dynamically sized memory
 The size of types with the structs must be compile-time known.
-They can be `struct`s or`Tuples`, they can not be `Vectors`s.
+They can be `struct`s or`Tuples`, they can not be `Vector`s.
 This also means it can not contain types like `Dict`s which are built on type of `Vector`s.
+However, if you know the size of your `Array`s, wrapping them in `StaticArrays.SizedArray`
+allows them to be used inside a `VectorPrism`/`AbstractRecordVector`.
 
 ### How does it work under the hood and is it fast?
 
