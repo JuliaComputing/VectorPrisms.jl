@@ -98,6 +98,14 @@ end
     push!(block.args, :(throw(BoundsError())))
     return block
 end
+function getsome_expr!(block, ::Type, ::Type{<:Type}, get_path_expr)
+    return block
+end
+function getsome_expr!(block, ::Type{Type}, ::Type{<:Type}, get_path_expr)
+    ind_val = length(block.args) + 1
+    push!(block.args, :(ii==$(ind_val) && return $get_path_expr))
+    return block
+end
 function getsome_expr!(block, ::Type{Terminal}, ::Type{<:Terminal}, get_path_expr) where Terminal
     ind_val = length(block.args) + 1
     push!(block.args, :(ii==$(ind_val) && return $get_path_expr))
@@ -123,6 +131,8 @@ end
 @generated function Base.size(x::AbstractRecordVector{T}) where T
     return tuple(size_from(T, x))
 end
+size_from(::Type, ::Type{<:Type}) = 0
+size_from(::Type{Type}, ::Type{<:Type}) = 1
 size_from(::Type{Terminal}, ::Type{<:Terminal}) where Terminal = 1
 function size_from(Terminal, ::Type{V}) where V
     sum(fieldtypes(V); init=0) do fieldtype
@@ -208,6 +218,8 @@ function setsome_expr!(block, Terminal, S, get_path_expr)
             ind_val = length(block.args) + 1
             set_path_expr = :(setfield!($get_path_expr, $field_ind, value))
             push!(block.args, :(ii==$(ind_val) && return $set_path_expr))
+        elseif ft <: Type
+            continue
         else
             fpath = :(getfield($get_path_expr, $field_ind))
             setsome_expr!(block, Terminal, ft, fpath)
