@@ -1,6 +1,6 @@
 name = "VectorPrisms"
 uuid = "fca4bea3-143f-49fa-bca2-9809b242ef85"
-version = "1.1.0"
+version = "1.1.1"
 
 [deps]
 StaticArraysCore = "1e83bf80-4336-4d27-bf5d-d5a4f845583c"
