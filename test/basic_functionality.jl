@@ -118,7 +118,7 @@ r3=IRecord3(1.0, (2.0, 3))
 @test_throws BoundsError r3[-1]=11.0
 @test_throws ErrorException r3[1]=10.0
 @test paths(typeof(r3)) == ["a", "b.:(1)", "b.:(2)"]  # not sure this is ideal, but it will do for now
-@test paths(Expr, typeof(r3); start_from=:x) == [:(x.a), :(x.b.:(1)), :(x.b.:(2))] 
+@test paths(Expr, typeof(r3); start_from=:x) == [:(x.a), :(x.b.:(1)), :(x.b.:(2))]
 @test indexof(typeof(r3), :a) == 1
 @test indexof(typeof(r3), :b, 1) == 2
 @test indexof(typeof(r3), :b, 2) == 3
@@ -143,3 +143,14 @@ mix1 = VectorPrism{Float64}((;a=1.5, b=nothing))
 mt_callable = VectorPrism{Float64}(x->2x)
 @test size(mt_callable) == (0,)
 @test mt_callable(4.5) == 9.0
+
+struct IRecord4{T} <: AbstractRecordVector{T}
+    a::DataType
+    b::Tuple{Float64, Int}
+end
+for (rec, field) in ((IRecord4{Int}(Int, (1.0, 1)), 1),
+                     (IRecord4{Float64}(Int, (1.0, 1)), 1.0),
+                     (IRecord4{Type}(Int, (1.0, 1)), Int))
+    @test length(rec) == 1
+    @test rec[1] === field
+end
